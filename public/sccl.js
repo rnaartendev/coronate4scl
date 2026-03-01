@@ -1,4 +1,4 @@
-/* C4SCL Logica V13 - Nieuwe Kolomnamen & Volgorde */
+/* C4SCL Logica V14 - Fixed Rating Logic & New Column Names */
 function toggleSCCL() {
     const screen = document.getElementById('sccl-screen');
     if (screen.style.display === 'none' || screen.style.display === '') {
@@ -46,13 +46,22 @@ function renderSCCL(tourney, players) {
                 const oppId = isWhite ? (m.BlackId || m.blackId) : (m.WhiteId || m.whiteId);
                 const opponent = players[oppId];
                 const res = m.Result || m.result;
-                const ratingDiff = isWhite ? (m.WhiteRatingDiff || m.whiteRatingDiff || 0) : (m.BlackRatingDiff || m.blackRatingDiff || 0);
-                const hasEarnedPoints = Math.abs(ratingDiff) > 0.1;
+
+                // FIX: Bereken het verschil op basis van New en Orig rating velden uit de JSON
+                const newR = isWhite ? (m.WhiteNewRating || m.whiteNewRating || 0) : (m.BlackNewRating || m.blackNewRating || 0);
+                const oldR = isWhite ? (m.WhiteOrigRating || m.whiteOrigRating || 0) : (m.BlackOrigRating || m.blackOrigRating || 0);
+                const ratingDiff = Math.abs(newR - oldR);
+                const hasEarnedPoints = ratingDiff > 0.1;
+
                 const isOppDummy = oppId && oppId.includes("DUMMY");
                 const isNamedExtern = opponent && (opponent.FirstName || opponent.firstName || "").toUpperCase().includes("EXTERN");
 
                 if (isOppDummy) {
-                    if (hasEarnedPoints || isNamedExtern) extern++; else byes++;
+                    if (hasEarnedPoints || isNamedExtern) {
+                        extern++; 
+                    } else {
+                        byes++; 
+                    }
                 } else {
                     if (isWhite) {
                         wG++; if (res === 'whiteWon') won++; else if (res === 'blackWon') loss++; else if (res === 'draw') dr++;
@@ -74,7 +83,7 @@ function renderSCCL(tourney, players) {
         };
     }).sort((a, b) => b.netto - a.netto);
 
-    // Header met nieuwe namen: +, =, -, Vrij, Ext, Abs, Wi, Zw
+    // Tabel met de nieuwe namen: +, =, -, Vrij, Ext, Abs, Wi, Zw
     let html = `<table class="sccl-table"><thead><tr>
         <th>Pos</th><th>Naam</th><th>Rating (Aftrek)</th>
         <th class="sccl-highlight">+</th><th class="sccl-highlight">=</th><th class="sccl-highlight">-</th>
