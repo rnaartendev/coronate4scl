@@ -12,34 +12,41 @@
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <div id="root"></div>
   <script type="module" src="/src/Main.res.mjs"></script>
-<style>
+
+  <style>
     #sccl-fab {
-        position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px;
+        position: fixed; bottom: 25px; right: 25px; width: 65px; height: 65px;
         background: #0071e3; color: white; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        z-index: 999999; cursor: pointer; border: none;
+        font-size: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        z-index: 999999; cursor: pointer; border: none; transition: transform 0.1s;
     }
+    #sccl-fab:active { transform: scale(0.9); }
     #sccl-screen {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: #f5f5f7; z-index: 999998; overflow-y: auto; padding: 20px; box-sizing: border-box;
+        background: #f5f5f7; z-index: 999998; overflow-y: auto; padding: 15px; box-sizing: border-box;
     }
-    .sccl-card { background: white; padding: 20px; border-radius: 12px; max-width: 1000px; margin: 40px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.1); font-family: sans-serif; }
-    .sccl-close { position: absolute; top: 20px; right: 20px; background: #3a3a3c; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-    .sccl-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-    .sccl-table th { background: #f5f5f7; padding: 12px; text-align: left; color: #86868b; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #ddd; }
-    .sccl-table td { padding: 12px; border-bottom: 1px solid #eee; }
-    .sccl-netto { font-weight: bold; color: #0071e3; background: #f1f8ff; }
+    .sccl-card { background: white; padding: 20px; border-radius: 16px; max-width: 1100px; margin: 40px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.1); font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    .sccl-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .sccl-close { background: #3a3a3c; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
+    .sccl-table-container { overflow-x: auto; }
+    .sccl-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+    .sccl-table th { background: #f5f5f7; padding: 12px 8px; text-align: left; color: #86868b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eee; }
+    .sccl-table td { padding: 12px 8px; border-bottom: 1px solid #f0f0f0; color: #1d1d1f; }
+    .sccl-netto { font-weight: 800; color: #0071e3; background: #f1f8ff; text-align: center; }
+    .sccl-penalty { color: #ff3b30; font-weight: 600; }
 </style>
 
 <button id="sccl-fab" onclick="toggleSCCL()">🏆</button>
 
 <div id="sccl-screen">
-    <button class="sccl-close" onclick="toggleSCCL()">Sluiten ✕</button>
     <div class="sccl-card">
-        <h2>🏆 SCCL Netto Rating</h2>
-        <div id="sccl-table-render">
-            <p>Geen data. Importeer eerst een toernooi via de normale 'Options' knop.</p>
+        <div class="sccl-header">
+            <h2 style="margin:0; font-size: 22px;">🏆 SCCL Stand</h2>
+            <button class="sccl-close" onclick="toggleSCCL()">SLUITEN ✕</button>
+        </div>
+        <div id="sccl-table-render" class="sccl-table-container">
+            <p style="color: #666; text-align: center; padding: 20px;">Geen data gevonden. Importeer eerst je toernooi via 'Options' in de app.</p>
         </div>
     </div>
 </div>
@@ -53,47 +60,77 @@ function toggleSCCL() {
 }
 
 function updateSCCL() {
-    const request = indexedDB.open("coronate");
+    // We openen de database "Coronate" (met hoofdletter C)
+    const request = indexedDB.open("Coronate");
+    
     request.onsuccess = (e) => {
         const db = e.target.result;
         try {
-            const tx = db.transaction(["tournaments", "players"], "readonly");
-            tx.objectStore("tournaments").getAll().onsuccess = (ev) => {
+            // We gebruiken de stores "Tournaments" en "Players"
+            const tx = db.transaction(["Tournaments", "Players"], "readonly");
+            
+            tx.objectStore("Tournaments").getAll().onsuccess = (ev) => {
                 const tourney = ev.target.result[0];
-                tx.objectStore("players").getAll().onsuccess = (ev2) => {
+                tx.objectStore("Players").getAll().onsuccess = (ev2) => {
                     const players = {};
-                    ev2.target.result.forEach(p => players[p.id] = p);
+                    ev2.target.result.forEach(p => { players[p.id || p.Id] = p; });
                     if (tourney) renderSCCL(tourney, players);
                 };
             };
-        } catch(err) { console.log("Database leeg of bezig..."); }
+        } catch(err) {
+            console.error("Database structuur fout:", err);
+            document.getElementById('sccl-table-render').innerHTML = "<p style='color:red'>Fout: Kon de tabellen niet vinden. Heb je al een import gedaan?</p>";
+        }
     };
 }
 
 function renderSCCL(tourney, players) {
-    const rounds = tourney.roundList || [];
+    const rounds = tourney.RoundList || tourney.roundList || [];
     const totalRounds = rounds.length;
-    let list = Object.keys(players).filter(id => !id.includes("DUMMY")).map(id => {
-        let p = players[id], wG=0, bG=0, won=0, dr=0, loss=0, pres=0;
+    
+    let stats = Object.keys(players).filter(id => !id.includes("DUMMY")).map(id => {
+        let p = players[id];
+        let fName = p.FirstName || p.firstName || "";
+        let lName = p.LastName || p.lastName || "";
+        let rating = p.Rating || p.rating || 0;
+        
+        let wG=0, bG=0, won=0, dr=0, loss=0, pres=0;
+        
         rounds.forEach(r => {
-            const m = r.find(m => m.whiteId === id || m.blackId === id);
+            const m = r.find(match => (match.WhiteId || match.whiteId) === id || (match.BlackId || match.blackId) === id);
             if (m) {
                 pres++;
-                if (m.whiteId === id) {
-                    wG++; if (m.result==='whiteWon') won++; else if (m.result==='blackWon') loss++; else if (m.result==='draw') dr++;
+                const isWhite = (m.WhiteId || m.whiteId) === id;
+                const res = m.Result || m.result;
+                if (isWhite) {
+                    wG++;
+                    if (res === 'whiteWon') won++; else if (res === 'blackWon') loss++; else if (res === 'draw') dr++;
                 } else {
-                    bG++; if (m.result==='blackWon') won++; else if (m.result==='whiteWon') loss++; else if (m.result==='draw') dr++;
+                    bG++;
+                    if (res === 'blackWon') won++; else if (res === 'whiteWon') loss++; else if (res === 'draw') dr++;
                 }
             }
         });
-        let x = (totalRounds - pres) - 2;
+
+        let gemist = totalRounds - pres;
+        let x = gemist - 2;
         let aftrek = x > 0 ? (x * (x + 1)) / 2 : 0;
-        return { name: (p.firstName + " " + (p.lastName || "")).trim(), rat: p.rating || 0, wG, bG, won, dr, loss, gem: (totalRounds-pres), aftrek, netto: (p.rating || 0) - aftrek };
+        let netto = rating - aftrek;
+
+        return { name: (fName + " " + lName).trim(), rating, wG, bG, won, dr, loss, gemist, aftrek, netto };
     }).sort((a, b) => b.netto - a.netto);
 
-    let html = `<table class="sccl-table"><thead><tr><th>Pos</th><th>Naam</th><th>Rating</th><th>Wit</th><th>Zwart</th><th>Winst</th><th>Remise</th><th>Verlies</th><th>Gemist</th><th>Aftrek</th><th class="sccl-netto">Netto</th></tr></thead><tbody>`;
-    list.forEach((s, i) => {
-        html += `<tr><td>${i+1}</td><td><b>${s.name}</b></td><td>${s.rating}</td><td>${s.wG}</td><td>${s.bG}</td><td>${s.won}</td><td>${s.dr}</td><td>${s.loss}</td><td>${s.gem}</td><td style="color:#ff3b30">-${s.aftrek}</td><td class="sccl-netto">${s.netto}</td></tr>`;
+    let html = `<table class="sccl-table"><thead><tr>
+        <th>Pos</th><th>Naam</th><th>Rating</th><th>W</th><th>Z</th><th>+</th><th>=</th><th>-</th><th>G</th><th>Aftrek</th><th class="sccl-netto">Netto</th>
+    </tr></thead><tbody>`;
+    
+    stats.forEach((s, i) => {
+        html += `<tr>
+            <td>${i+1}</td><td><b>${s.name}</b></td><td>${s.rating}</td>
+            <td>${s.wG}</td><td>${s.bG}</td><td>${s.won}</td><td>${s.dr}</td><td>${s.loss}</td>
+            <td>${s.gemist}</td><td class="sccl-penalty">-${s.aftrek}</td>
+            <td class="sccl-netto">${s.netto}</td>
+        </tr>`;
     });
     document.getElementById('sccl-table-render').innerHTML = html + "</tbody></table>";
 }
