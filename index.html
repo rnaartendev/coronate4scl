@@ -30,7 +30,7 @@
     .sccl-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
     .sccl-close { background: #3a3a3c; color: white; border: none; padding: 10px 18px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 14px; }
     .sccl-table-container { overflow-x: auto; }
-    .sccl-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 800px; }
+    .sccl-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 850px; }
     .sccl-table th { background: #f5f5f7; padding: 12px 8px; text-align: left; color: #86868b; font-size: 10px; text-transform: uppercase; border-bottom: 2px solid #eee; }
     .sccl-table td { padding: 12px 8px; border-bottom: 1px solid #f0f0f0; color: #1d1d1f; }
     .sccl-netto { font-weight: 800; color: #0071e3; background: #f1f8ff; text-align: center; }
@@ -39,47 +39,70 @@
 
 <button id="sccl-fab" onclick="toggleSCCL()">🏆</button>
 
-<div id="sccl-screen">
+<div id="sccl-screen" style="display: none;">
     <div class="sccl-card">
         <div class="sccl-header">
             <h2 style="margin:0; font-size: 24px; color: #1d1d1f;">🏆 C4SCL Stand</h2>
             <button class="sccl-close" onclick="toggleSCCL()">SLUITEN ✕</button>
         </div>
         <div id="sccl-table-render" class="sccl-table-container">
-            <p style="text-align: center; padding: 20px; color: #666;">Data laden uit database...</p>
+            <p style="text-align: center; padding: 20px; color: #666;">Klik op de trofee om data te laden...</p>
         </div>
     </div>
 </div>
 
 <script>
+console.log("C4SCL Module Geladen");
+
 function toggleSCCL() {
     const screen = document.getElementById('sccl-screen');
-    const isVisible = screen.style.display === 'block';
-    screen.style.display = isVisible ? 'none' : 'block';
-    if (!isVisible) updateSCCL();
+    console.log("Toggle geklikt. Huidige status:", screen.style.display);
+    
+    if (screen.style.display === 'none' || screen.style.display === '') {
+        screen.style.display = 'block';
+        updateSCCL();
+    } else {
+        screen.style.display = 'none';
+    }
 }
 
 function updateSCCL() {
+    console.log("Database openen...");
     const request = indexedDB.open("Coronate");
+    
     request.onsuccess = (e) => {
         const db = e.target.result;
+        console.log("Database verbonden. Stores:", db.objectStoreNames);
+        
         try {
             const tx = db.transaction(["Tournaments", "Players"], "readonly");
-            tx.objectStore("Tournaments").getAll().onsuccess = (ev) => {
+            const tStore = tx.objectStore("Tournaments");
+            const pStore = tx.objectStore("Players");
+
+            tStore.getAll().onsuccess = (ev) => {
                 const tourney = ev.target.result[0];
-                tx.objectStore("Players").getAll().onsuccess = (ev2) => {
+                pStore.getAll().onsuccess = (ev2) => {
                     const players = {};
                     ev2.target.result.forEach(p => { players[p.id || p.Id] = p; });
-                    if (tourney) renderSCCL(tourney, players);
+                    if (tourney) {
+                        renderSCCL(tourney, players);
+                    } else {
+                        document.getElementById('sccl-table-render').innerHTML = "Geen toernooi data gevonden.";
+                    }
                 };
             };
         } catch(err) {
-            document.getElementById('sccl-table-render').innerHTML = "<p style='padding:20px;'>Geen data. Importeer eerst een toernooi via 'Options'.</p>";
+            console.error("Fout in transactie:", err);
+            document.getElementById('sccl-table-render').innerHTML = 
+                "<p style='padding:20px;'><b>Database fout.</b><br>Zorg dat je eerst een JSON hebt geïmporteerd via 'Options'.</p>";
         }
     };
+
+    request.onerror = (err) => console.error("DB Open Fout:", err);
 }
 
 function renderSCCL(tourney, players) {
+    console.log("Tabel renderen gestart...");
     const rounds = tourney.RoundList || tourney.roundList || [];
     const totalRounds = rounds.length;
     
@@ -92,8 +115,48 @@ function renderSCCL(tourney, players) {
         let wG=0, bG=0, won=0, dr=0, loss=0, pres=0;
         
         rounds.forEach(r => {
-            const m = r.find(match => (match.WhiteId || match.whiteId) === id || (
-  
+            const m = r.find(match => (match.WhiteId || match.whiteId) === id || (match.BlackId || match.blackId) === id);
+            if (m) {
+                pres++;
+                const isWhite = (m.WhiteId || m.whiteId) === id;
+                const res = m.Result || m.result;
+                if (isWhite) {
+                    wG++;
+                    if (res === 'whiteWon') won++; else if (res === 'blackWon') loss++; else if (res === 'draw') dr++;
+                } else {
+                    bG++;
+                    if (res === 'blackWon') won++; else if (res === 'whiteWon') loss++; else if (res === 'draw') dr++;
+                }
+            }
+        });
+
+        let gemist = totalRounds - pres;
+        let x = gemist - 2;
+        let aftrek = x > 0 ? (x * (x + 1)) / 2 : 0;
+        let netto = rating - aftrek;
+
+        return { name: (fName + " " + lName).trim(), rating, wG, bG, won, dr, loss, gemist, aftrek, netto };
+    }).sort((a, b) => b.netto - a.netto);
+
+    let html = `<table class="sccl-table"><thead><tr>
+        <th>Pos</th><th>Naam</th><th>Rating (Aftrek)</th>
+        <th>W</th><th>Z</th><th>+</th><th>=</th><th>-</th><th>G</th>
+        <th class="sccl-netto">Netto</th>
+    </tr></thead><tbody>`;
+    
+    stats.forEach((s, i) => {
+        html += `<tr>
+            <td>${i+1}</td>
+            <td><b>${s.name}</b></td>
+            <td>${Math.round(s.rating)}<span class="sccl-deduction-inline">(-${s.aftrek})</span></td>
+            <td>${s.wG}</td><td>${s.bG}</td><td>${s.won}</td><td>${s.dr}</td><td>${s.loss}</td><td>${s.gemist}</td>
+            <td class="sccl-netto">${Math.round(s.netto)}</td>
+        </tr>`;
+    });
+    document.getElementById('sccl-table-render').innerHTML = html + "</tbody></table>";
+    console.log("Renderen voltooid.");
+}
+</script>
 </body>
 
 </html>
