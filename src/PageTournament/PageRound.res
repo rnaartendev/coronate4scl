@@ -137,15 +137,15 @@ module MatchRow = {
           )
         /* INTERCEPT: Check for External player before doing Elo math */
         | (BlackWon | WhiteWon | Draw, Some(white), Some(black)) 
-        if Id.isExternal(white.id) || Id.isExternal(black.id) => 
-        let bonus = config.externalBonus
-        if Id.isExternal(black.id) {
-        /* White played External: White gets bonus, External stays 0 */
-        (m.whiteOrigRating + bonus, 0)
-        } else {
-        /* Black played External: Black gets bonus, External stays 0 */
-        (0, m.blackOrigRating + bonus)
-          }
+          if Id.isExternal(white.id) || Id.isExternal(black.id) => 
+            let bonus = config.externalBonus
+            if Id.isExternal(black.id) {
+              /* White played External: White gets bonus, External stays 0 */
+              (m.whiteOrigRating + bonus, 0)
+            } else {
+              /* Black played External: Black gets bonus, External stays 0 */
+              (0, m.blackOrigRating + bonus)
+            }
         /* Standard Elo calculation for real players */
         | (BlackWon | WhiteWon | Draw, Some(white), Some(black)) =>
           Ratings.calcNewRatings(
@@ -196,7 +196,7 @@ module MatchRow = {
     | None => false
     | Some(selectedValue) => Id.eq(m.id, selectedValue)
     }
-    <tr className={`${className} ${matchResultClass} ${selected ? "selected" : ""}}`}>
+    <tr className={`${className} ${matchResultClass} ${selected ? "selected" : ""}`}>
       <th className={"pageround__row-id table__number"} scope="row">
         {string_of_int(pos + 1)->React.string}
       </th>
