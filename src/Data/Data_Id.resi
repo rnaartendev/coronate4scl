@@ -17,10 +17,19 @@ let fromString: string => t
 */
 let dummy: t
 
+/** This is used to indicate an external player.
+*/
+let xternal: t       
+
 /**
   This is useful for passing to `keep` functions.
   */
 let isDummy: t => bool
+
+/**
+  Check if an ID belongs to the external player.
+*/
+let isExternal: t => bool  
 
 let random: unit => t
 
