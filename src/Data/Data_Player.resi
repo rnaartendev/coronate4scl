@@ -7,6 +7,7 @@
 */
 module Type: {
   type t = Person | Dummy | Missing
+  type t = Person | Dummy | Missing | Xternal /* Xternal */
 
   let toString: t => string
 }
