@@ -20,7 +20,7 @@ let xternal = "________EXTERNAL________"
 
 let isDummy = id => id == dummy
 
-let isExternal = id => id == xternal // Changed
+@live let isExternal = id => id == xternal // Changed
 
 let random = Externals.nanoid
 
