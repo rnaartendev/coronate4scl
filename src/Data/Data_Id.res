@@ -16,7 +16,11 @@ let fromString = x => x
 
 let dummy = "________DUMMY________"
 
+let external = "________EXTERNAL________"
+
 let isDummy = id => id == dummy
+
+let isExternal = id => id == external // Changed
 
 let random = Externals.nanoid
 
