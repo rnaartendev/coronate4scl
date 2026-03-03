@@ -124,5 +124,6 @@ module Pair = {
     }
 
     let toMap = x => Belt.Set.reduce(x, Belt.Map.make(~id=id_id), toMapReducer)
+    let _ = isExternal
   }
 }
