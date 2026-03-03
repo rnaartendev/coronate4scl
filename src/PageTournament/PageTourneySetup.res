@@ -165,13 +165,6 @@ let make = (~tournament: LoadTournament.t) => {
       <Link to_=Options> {React.string("app options")} </Link>
       {React.string(".")}
     </p>
-<p className="caption-30" id="score-desc">
-      {React.string("This will update ")}
-      <em> {React.string("all")} </em>
-      {React.string(" bye matches which have been previously scored... ")}
-      <Link to_=Options> {React.string("app options")} </Link>
-      {React.string(".")}
-    </p>
     
     <hr style={{margin: "20px 0", opacity: "0.2"}} />
 
