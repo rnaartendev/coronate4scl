@@ -38,6 +38,7 @@ let config: Config.t = {
   lastBackup: Js.Date.fromString("1970-01-01T00:00:00.000Z"),
   whiteAlias: Config.aliasEmpty,
   blackAlias: Config.aliasEmpty,
+  externalBonus: 0,
 }
 
 let players = Map.fromArray(
