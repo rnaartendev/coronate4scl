@@ -165,9 +165,13 @@ let make = id => {
 }
 
 let isNotDummy = (scores, oppId) =>
-  switch Map.get(scores, oppId) {
-  | None => true
-  | Some(opponent) => !opponent.isDummy
+  if (Data_Id.isExternal(oppId)) {
+    false // External is treated as a system player, like a dummy
+  } else {
+    switch Map.get(scores, oppId) {
+    | None => true
+    | Some(opponent) => !opponent.isDummy
+    }
   }
 
 let getPlayerScore = (scores, id) =>
@@ -343,18 +347,18 @@ let update = (
       firstRating: origRating,
       adjustment: Map.getWithDefault(scoreAdjustments, playerId, 0.0),
       results: list{result},
-      resultsNoByes: Data_Id.isDummy(oppId) ? list{} : list{result},
+      resultsNoByes: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId) ? list{} : list{result},
       lastColor: Some(color),
       colorScores: list{Color.toScore(color)},
       opponentResults: list{(oppId, result)},
       ratings: list{newRating},
-      isDummy: Data_Id.isDummy(playerId),
+      isDummy: Data_Id.isDummy(playerId) || Data_Id.isExternal(playerId),
     })
   | Some(data) =>
     Some({
       ...data,
       results: list{result, ...data.results},
-      resultsNoByes: Data_Id.isDummy(oppId)
+      resultsNoByes: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId) 
         ? data.resultsNoByes
         : list{result, ...data.resultsNoByes},
       lastColor: Some(color),
