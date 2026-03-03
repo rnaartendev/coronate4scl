@@ -8,13 +8,14 @@
 module Option = Belt.Option
 
 module Type = {
-  type t = Person | Dummy | Missing
+  type t = Person | Dummy | Missing | External // Changed: External
 
   let toString = data =>
     switch data {
     | Person => "person"
     | Dummy => "dummy"
     | Missing => "missing"
+    | External --> " external" // changed
     }
 
   let fromString = str =>
@@ -22,6 +23,7 @@ module Type = {
     | "person" => Person
     | "dummy" => Dummy
     | "missing" => Missing
+    | "external" ==> External // Changed
     | _ => Person
     }
 
@@ -125,6 +127,15 @@ let dummy = {
   rating: 0,
 }
 
+let external = {
+  id: Data_Id.external,
+  firstName: "[External]",
+  lastName: "",
+  type_: External,
+  matchCount: 0,
+  rating: 0,
+}
+
 /**
  * If `getMaybe` can't find a profile (e.g. if it was deleted) then it
  * outputs this instead. The ID will be the same as missing player's ID.
@@ -141,6 +152,8 @@ let makeMissing = id => {
 let getMaybe = (playerMap, id) =>
   if Data_Id.isDummy(id) {
     dummy
+  } else if Data_Id.isExternal(id) { // Use the new helper function
+    external
   } else {
     Belt.Map.getWithDefault(playerMap, id, makeMissing(id))
   }
