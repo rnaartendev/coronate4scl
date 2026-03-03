@@ -8,14 +8,14 @@
 module Option = Belt.Option
 
 module Type = {
-  type t = Person | Dummy | Missing | External // Changed: External
+  type t = Person | Dummy | Missing | Xternal // Changed: Xternal
 
   let toString = data =>
     switch data {
     | Person => "person"
     | Dummy => "dummy"
     | Missing => "missing"
-    | External --> " external" // changed
+    | Xternal => "Xternal" // changed
     }
 
   let fromString = str =>
@@ -23,7 +23,7 @@ module Type = {
     | "person" => Person
     | "dummy" => Dummy
     | "missing" => Missing
-    | "external" ==> External // Changed
+    | "Xternal" ==> Xternal // Changed
     | _ => Person
     }
 
@@ -127,11 +127,11 @@ let dummy = {
   rating: 0,
 }
 
-let external = {
-  id: Data_Id.external,
-  firstName: "[External]",
+let Xternal = {
+  id: Data_Id.xternalid,
+  firstName: "[Xternal]",
   lastName: "",
-  type_: External,
+  type_: Xternal,
   matchCount: 0,
   rating: 0,
 }
@@ -152,8 +152,8 @@ let makeMissing = id => {
 let getMaybe = (playerMap, id) =>
   if Data_Id.isDummy(id) {
     dummy
-  } else if Data_Id.isExternal(id) { // Use the new helper function
-    external
+  } else if Data_Id.isXternal(id) { // Use the new helper function
+    Xternal
   } else {
     Belt.Map.getWithDefault(playerMap, id, makeMissing(id))
   }
