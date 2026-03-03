@@ -37,6 +37,7 @@ type t = {
   lastBackup: Js.Date.t,
   whiteAlias: alias,
   blackAlias: alias,
+  externalBonus: int, //Adjustable points against External
 }
 
 let decode = json => {
@@ -51,6 +52,12 @@ let decode = json => {
     ->Js.Date.fromString,
     whiteAlias: d->Js.Dict.get("whiteAlias")->Option.flatMap(Js.Json.decodeString),
     blackAlias: d->Js.Dict.get("blackAlias")->Option.flatMap(Js.Json.decodeString),
+    /* : safe decoding for the bonus value */
+    externalBonus: d
+    ->Js.Dict.get("externalBonus")
+    ->Option.flatMap(Js.Json.decodeNumber)
+    ->Option.getWithDefault(10.0) // fallback for existing data
+    ->Belt.Float.toInt,
   }
 }
 
@@ -67,6 +74,8 @@ let encode = data =>
     ("lastBackup", data.lastBackup->Js.Date.toJSONUnsafe->Js.Json.string),
     ("whiteAlias", encodeAlias(data.whiteAlias)),
     ("blackAlias", encodeAlias(data.blackAlias)),
+    /* Convert int back to JSON number */
+    ("externalBonus", data.externalBonus->Belt.Float.fromInt->Js.Json.number),
   ])->Js.Json.object_
 
 let default = {
@@ -75,6 +84,7 @@ let default = {
   lastBackup: Js.Date.fromFloat(0.0),
   whiteAlias: None,
   blackAlias: None,
+  externalBonus: 10, // Standard C4SCL value
 }
 
 let aliasEmpty = None
