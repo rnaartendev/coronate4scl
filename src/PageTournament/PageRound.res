@@ -135,6 +135,18 @@ module MatchRow = {
             m.whiteOrigRating,
             m.blackOrigRating,
           )
+        /* INTERCEPT: Check for External player before doing Elo math */
+        | (BlackWon | WhiteWon | Draw, Some(white), Some(black)) 
+        if Id.isExternal(white.id) || Id.isExternal(black.id) => 
+        let bonus = config.externalBonus
+        if Id.isExternal(black.id) {
+        /* White played External: White gets bonus, External stays 0 */
+        (m.whiteOrigRating + bonus, 0)
+        } else {
+        /* Black played External: Black gets bonus, External stays 0 */
+        (0, m.blackOrigRating + bonus)
+          }
+        /* Standard Elo calculation for real players */
         | (BlackWon | WhiteWon | Draw, Some(white), Some(black)) =>
           Ratings.calcNewRatings(
             ~whiteRating=m.whiteOrigRating,
