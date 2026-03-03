@@ -15,7 +15,7 @@ module Type = {
     | Person => "person"
     | Dummy => "dummy"
     | Missing => "missing"
-    | Xternal => "Xternal" // changed
+    | Xternal => "xternal" // changed
     }
 
   let fromString = str =>
@@ -23,7 +23,7 @@ module Type = {
     | "person" => Person
     | "dummy" => Dummy
     | "missing" => Missing
-    | "Xternal" => Xternal // Changed
+    | "xternal" => Xternal // Changed
     | _ => Person
     }
 
@@ -127,8 +127,8 @@ let dummy = {
   rating: 0,
 }
 
-let Xternal = {
-  id: Data_Id.xternalid,
+let xternal = {
+  id: Data_Id.xternal,
   firstName: "[Xternal]",
   lastName: "",
   type_: Xternal,
@@ -152,8 +152,8 @@ let makeMissing = id => {
 let getMaybe = (playerMap, id) =>
   if Data_Id.isDummy(id) {
     dummy
-  } else if Data_Id.isXternal(id) { // Use the new helper function
-    Xternal
+  } else if Data_Id.isExternal(id) { // Use the new helper function
+    xternal
   } else {
     Belt.Map.getWithDefault(playerMap, id, makeMissing(id))
   }
