@@ -22,6 +22,9 @@ let isDummy = id => id == dummy
 
 @live let isExternal = id => id == xternal // Changed
 
+let _ = xternal
+let _ = isExternal
+
 let random = Externals.nanoid
 
 let encode = s => Js.Json.string(s)
@@ -124,6 +127,5 @@ module Pair = {
     }
 
     let toMap = x => Belt.Set.reduce(x, Belt.Map.make(~id=id_id), toMapReducer)
-    let _ = isExternal
   }
 }
