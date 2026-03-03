@@ -21,6 +21,7 @@ type t = {
   lastBackup: Js.Date.t,
   whiteAlias: alias,
   blackAlias: alias,
+  externalBonus: int, /* External */
 }
 
 let decode: Js.Json.t => t
