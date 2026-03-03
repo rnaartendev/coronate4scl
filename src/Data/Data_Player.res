@@ -23,7 +23,7 @@ module Type = {
     | "person" => Person
     | "dummy" => Dummy
     | "missing" => Missing
-    | "Xternal" ==> Xternal // Changed
+    | "Xternal" => Xternal // Changed
     | _ => Person
     }
 
