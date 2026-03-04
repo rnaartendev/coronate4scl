@@ -678,7 +678,8 @@ li.inactive {
   opacity: 0.5;
 }
 
-.dummy {
+.dummy, 
+.xternal {
   font-style: italic;
 }
 
