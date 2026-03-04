@@ -191,6 +191,7 @@ module SelectList = {
           )
           ->React.array}
           <SelectPlayerRow player=Player.dummy ideal=0.0 state dispatch />
+          <SelectPlayerRow player=Player.xternal ideal=0.0 state dispatch />
         </tbody>
       </table>
     }
