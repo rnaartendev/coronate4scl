@@ -165,30 +165,5 @@ let make = (~tournament: LoadTournament.t) => {
       <Link to_=Options> {React.string("app options")} </Link>
       {React.string(".")}
     </p>
-    
-    <hr style={{margin: "20px 0", opacity: "0.2"}} />
-
-    <h2> {React.string("External Match Bonus")} </h2>
-    <p className="caption-30">
-      {React.string("Set the number of points awarded to a club member when playing against an External entity.")}
-    </p>
-    <input
-      type_="number"
-      className="display-20"
-      style={{width: "80px", textAlign: "center"}}
-      value={tourney.config.externalBonus->Int.toString}
-      onChange={event => {
-        let val = (event->ReactEvent.Form.currentTarget)["value"]
-        let bonus = val->Int.fromString->Option.getWithDefault(10)
-        setTourney({
-          ...tourney,
-          config: {
-            ...tourney.config,
-            externalBonus: bonus,
-          },
-        })
-      }}
-    />
-    {React.string(" points")}
   </div>
 }
