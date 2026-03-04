@@ -46,6 +46,9 @@ let decode: Js.Json.t => t
   */
 let dummy: t
 
+/** This is used to indicate an external player. */
+let xternal: t
+
 /**
  This function should always be used in components that *might* not be able to
  display current player information. This includes bye rounds with "dummy"
