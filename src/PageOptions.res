@@ -465,6 +465,33 @@ let make = (~windowDispatch=_ => ()) => {
           />
         </label>
       </form>
+{/* --- START EXTERNAL BONUS BLOK --- */}
+      <h2> {React.string("External Match Bonus")} </h2>
+      <form onSubmit={e => ReactEvent.Form.preventDefault(e)}>
+        <p className="caption-30">
+          {React.string("Set the number of points awarded to a club member when playing against an External entity (like Maarten or Dick).")}
+        </p>
+        <label className="body-20">
+          <input
+            type_="number"
+            className="display-20"
+            style={{width: "80px", textAlign: "center", marginRight: "10px"}}
+            value={config.externalBonus->Int.toString}
+            onChange={event => {
+              let val = (event->ReactEvent.Form.currentTarget)["value"]
+              let bonus = val->Int.fromString->Option.getWithDefault(0)
+              
+              /* Update de globale configuratie */
+              configDispatch(SetState({
+                ...config,
+                externalBonus: bonus
+              }))
+            }}
+          />
+          {React.string(" points")}
+        </label>
+      </form>
+      {/* --- EINDE EXTERNAL BONUS BLOK --- */}
       <h2> {React.string("Manage data")} </h2>
       <p className="caption-20">
         {React.string("Last export: ")}
