@@ -35,7 +35,9 @@ let useRoundData = (
   | _ => Map.make(~id=Id.id)
   }
   /* make a new map so as not to affect auto-pairing */
-  let unmatchedWithDummy = Map.set(unmatched, Id.dummy, Player.dummy)
+  let unmatchedWithDummy = unmatched
+    ->Map.set(Id.dummy, Player.dummy)
+    ->Map.set(Id.xternal, Player.xternal)
   {scoreData, unmatched, unmatchedWithDummy}
 }
 
