@@ -347,7 +347,7 @@ let update = (
       firstRating: origRating,
       adjustment: Map.getWithDefault(scoreAdjustments, playerId, 0.0),
       results: list{result},
-      resultsNoByes: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId) ? list{} : list{result},
+      resultsNoByes: Data_Id.isDummy(oppId) ? list{} : list{result},
       lastColor: Some(color),
       colorScores: list{Color.toScore(color)},
       opponentResults: list{(oppId, result)},
@@ -358,7 +358,7 @@ let update = (
     Some({
       ...data,
       results: list{result, ...data.results},
-      resultsNoByes: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId) 
+      resultsNoByes: Data_Id.isDummy(oppId)
         ? data.resultsNoByes
         : list{result, ...data.resultsNoByes},
       lastColor: Some(color),
