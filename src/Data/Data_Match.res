@@ -70,7 +70,7 @@ type t = {
 }
 
 let isBye = ({whiteId, blackId, _}) => 
-  Data_Id.isDummy(whiteId) || Data_Id.isDummy(blackId) || 
+  Data_Id.isDummy(whiteId) || Data_Id.isDummy(blackId)
 
 let decode = json => {
   let d = Js.Json.decodeObject(json)
