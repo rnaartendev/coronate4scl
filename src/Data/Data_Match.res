@@ -71,7 +71,6 @@ type t = {
 
 let isBye = ({whiteId, blackId, _}) => 
   Data_Id.isDummy(whiteId) || Data_Id.isDummy(blackId) || 
-  Data_Id.isExternal(whiteId) || Data_Id.isExternal(blackId)
 
 let decode = json => {
   let d = Js.Json.decodeObject(json)
