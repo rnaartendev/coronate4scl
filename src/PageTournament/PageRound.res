@@ -124,29 +124,41 @@ module MatchRow = {
       let newResult = Match.Result.fromString(jsResultCode)
       let {whiteId, blackId, _} = m
 
-      /* if it hasn't changed, then do nothing */
+   /* 1. Only act if the result actually changed */
       if m.result != newResult {
         let whiteOpt = players->Map.get(whiteId)
         let blackOpt = players->Map.get(blackId)
+
         let (whiteNewRating, blackNewRating) = switch (newResult, whiteOpt, blackOpt) {
-        | (_, None, _)
-        | (_, _, None)
+        /* 2. BASE CASE: If match is aborted or not set, keep original ratings */
         | (Aborted | WhiteAborted | BlackAborted | NotSet, _, _) => (
             m.whiteOrigRating,
             m.blackOrigRating,
           )
-        /* INTERCEPT: Check for External player before doing Elo math */
-        | (BlackWon | WhiteWon | Draw, Some(white), Some(black)) 
-          if Id.isExternal(white.id) || Id.isExternal(black.id) => 
+
+        /* 3. INTERCEPT: External match check MUST be above the None checks.
+           We use the IDs directly (whiteId/blackId) because the objects (whiteOpt/blackOpt) 
+           will be 'None' for External players. */
+        | (BlackWon | WhiteWon | Draw, _, _) 
+          if Id.isExternal(whiteId) || Id.isExternal(blackId) => 
             let bonus = config.externalBonus
-            if Id.isExternal(black.id) {
-              /* White played External: White gets bonus, External stays 0 */
-              (m.whiteOrigRating + bonus, 0)
+            if Id.isExternal(blackId) {
+              /* White vs External: White gets bonus, External stays 0 */
+              (m.whiteOrigRating + bonus, m.blackOrigRating)
             } else {
-              /* Black played External: Black gets bonus, External stays 0 */
-              (0, m.blackOrigRating + bonus)
+              /* Black vs External: Black gets bonus, External stays 0 */
+              (m.whiteOrigRating, m.blackOrigRating + bonus)
             }
-        /* Standard Elo calculation for real players */
+
+        /* 4. SAFETY NET: If a REAL player is missing from the database, do nothing.
+           This is now below the External check, so it won't block the bonus. */
+        | (_, None, _)
+        | (_, _, None) => (
+            m.whiteOrigRating,
+            m.blackOrigRating,
+          )
+
+        /* 5. STANDARD: Elo calculation for two real players found in database */
         | (BlackWon | WhiteWon | Draw, Some(white), Some(black)) =>
           Ratings.calcNewRatings(
             ~whiteRating=m.whiteOrigRating,
