@@ -465,7 +465,7 @@ let make = (~windowDispatch=_ => ()) => {
           />
         </label>
       </form>
-{/* --- START EXTERNAL BONUS BLOK --- */}
+/* --- START EXTERNAL BONUS BLOK --- */
       <h2> {React.string("External Match Bonus")} </h2>
       <form onSubmit={e => ReactEvent.Form.preventDefault(e)}>
         <p className="caption-30">
@@ -491,7 +491,7 @@ let make = (~windowDispatch=_ => ()) => {
           {React.string(" points")}
         </label>
       </form>
-      {/* --- EINDE EXTERNAL BONUS BLOK --- */}
+      /* --- EINDE EXTERNAL BONUS BLOK --- */
       <h2> {React.string("Manage data")} </h2>
       <p className="caption-20">
         {React.string("Last export: ")}
