@@ -348,8 +348,9 @@ let update = (
       adjustment: Map.getWithDefault(scoreAdjustments, playerId, 0.0),
       results: list{result},
       resultsNoByes: Data_Id.isDummy(oppId) ? list{} : list{result},
-      lastColor: Some(color),
-      colorScores: list{Color.toScore(color)},
+      /* Voor de eerste match: alleen kleur opslaan als het geen Dummy of External is */
+      lastColor: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId) ? None : Some(color),
+      colorScores: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId) ? list{} : list{Color.toScore(color)},
       opponentResults: list{(oppId, result)},
       ratings: list{newRating},
       isDummy: Data_Id.isDummy(playerId) || Data_Id.isExternal(playerId),
@@ -361,8 +362,15 @@ let update = (
       resultsNoByes: Data_Id.isDummy(oppId)
         ? data.resultsNoByes
         : list{result, ...data.resultsNoByes},
-      lastColor: Some(color),
-      colorScores: list{Color.toScore(color), ...data.colorScores},
+      
+      /* DE AANPASSING VOOR DE KLEURBALANS: */
+      lastColor: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId)
+        ? data.lastColor 
+        : Some(color),
+      colorScores: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId)
+        ? data.colorScores 
+        : list{Color.toScore(color), ...data.colorScores},
+      
       opponentResults: list{(oppId, result), ...data.opponentResults},
       ratings: list{newRating, ...data.ratings},
     })
