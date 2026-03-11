@@ -21,7 +21,7 @@ function updateSCCL() {
                 ev2.target.result.forEach(p => { players[p.id || p.Id] = p; });
                 if (tourney) {
                     const tName = tourney.Name || tourney.name || "C4SCL";
-                    document.getElementById('sccl-title-text').innerText = "🏆 C4SCL Stand: " + tName;
+                    document.getElementById('sccl-title-text').innerText = "🏆 C4SCL v2000 Stand: " + tName;
                     renderSCCL(tourney, players);
                 }
             };
@@ -33,7 +33,11 @@ function renderSCCL(tourney, players) {
     const rounds = tourney.RoundList || tourney.roundList || [];
     const totalRounds = rounds.length;
     
-    let stats = Object.keys(players).filter(id => !id.includes("DUMMY")).map(id => {
+    // 1. Filter: We tonen alleen echte spelers (geen Dummies en geen Externals zelf)
+    let stats = Object.keys(players).filter(id => {
+        const upperId = id.toUpperCase();
+        return !upperId.includes("DUMMY") && !upperId.includes("EXTERNAL");
+    }).map(id => {
         let p = players[id];
         let rating = p.Rating || p.rating || 0;
         let wG=0, bG=0, won=0, dr=0, loss=0, pres=0, byes=0, extern=0;
@@ -47,33 +51,46 @@ function renderSCCL(tourney, players) {
                 const opponent = players[oppId];
                 const res = m.Result || m.result;
 
-                // FIX: Bereken het verschil op basis van New en Orig rating velden uit de JSON
+                // Ratings ophalen voor berekening verschil
                 const newR = isWhite ? (m.WhiteNewRating || m.whiteNewRating || 0) : (m.BlackNewRating || m.blackNewRating || 0);
                 const oldR = isWhite ? (m.WhiteOrigRating || m.whiteOrigRating || 0) : (m.BlackOrigRating || m.blackOrigRating || 0);
+                
+                // Check op bonuspunten (zoals de +100 uit de engine)
                 const ratingDiff = Math.abs(newR - oldR);
-                const hasEarnedPoints = ratingDiff > 0.1;
+                const hasRatingChange = ratingDiff > 0.1;
 
-                const isOppDummy = oppId && oppId.includes("DUMMY");
-                const isNamedExtern = opponent && (opponent.FirstName || opponent.firstName || "").toUpperCase().includes("EXTERNAL");
+                // NIEUWE LOGICA: Identificatie op basis van ID (niet alleen op naam)
+                const isOppDummy = oppId && oppId.toUpperCase().includes("DUMMY");
+                const isOppExternal = oppId && oppId.toUpperCase().includes("EXTERNAL");
 
-                if (isOppDummy) {
-                    if (hasEarnedPoints || isNamedExtern) {
+                if (isOppDummy || isOppExternal) {
+                    // Als er rating-punten zijn verdiend tegen een dummy/external, is het een 'Ext' ronde
+                    if (hasRatingChange || isOppExternal) {
                         extern++; 
                     } else {
-                        byes++; 
+                        byes++; // Anders is het een gewone Bye (Vrij)
                     }
+                    // LET OP: Hier doen we GEEN wG++ of bG++, dus kleuren tellen niet mee!
                 } else {
+                    // Een partij tegen een echt clublid
                     if (isWhite) {
-                        wG++; if (res === 'whiteWon') won++; else if (res === 'blackWon') loss++; else if (res === 'draw') dr++;
+                        wG++; // Kleur wit telt mee
+                        if (res === 'whiteWon') won++; 
+                        else if (res === 'blackWon') loss++; 
+                        else if (res === 'draw') dr++;
                     } else {
-                        bG++; if (res === 'blackWon') won++; else if (res === 'whiteWon') loss++; else if (res === 'draw') dr++;
+                        bG++; // Kleur zwart telt mee
+                        if (res === 'blackWon') won++; 
+                        else if (res === 'whiteWon') loss++; 
+                        else if (res === 'draw') dr++;
                     }
                 }
             }
         });
 
+        // SCL-Specifieke berekening voor afwezigheidsaftrek
         let gemist = totalRounds - pres;
-        let x = gemist - 2;
+        let x = gemist - 2; 
         let aftrek = x > 0 ? (x * (x + 1)) / 2 : 0;
         let netto = rating - aftrek;
 
@@ -83,7 +100,7 @@ function renderSCCL(tourney, players) {
         };
     }).sort((a, b) => b.netto - a.netto);
 
-    // Tabel met de nieuwe namen: +, =, -, Vrij, Ext, Abs, Wi, Zw
+    // Renderen van de tabel met de nieuwe kolomnamen
     let html = `<table class="sccl-table"><thead><tr>
         <th>Pos</th><th>Naam</th><th>Rating (Aftrek)</th>
         <th class="sccl-highlight">+</th><th class="sccl-highlight">=</th><th class="sccl-highlight">-</th>
@@ -94,7 +111,7 @@ function renderSCCL(tourney, players) {
     stats.forEach((s, i) => {
         html += `<tr>
             <td>${i+1}</td><td><b>${s.name}</b></td>
-            <td>${Math.round(s.rating)}<span class="sccl-deduction-inline">(-${s.aftrek})</span></td>
+            <td>${Math.round(s.rating)} <span class="sccl-deduction-inline">(-${s.aftrek})</span></td>
             <td class="sccl-highlight">${s.won}</td><td class="sccl-highlight">${s.dr}</td><td class="sccl-highlight">${s.loss}</td>
             <td>${s.byes}</td><td>${s.extern}</td><td>${s.gemist}</td>
             <td>${s.wG}</td><td>${s.bG}</td>
