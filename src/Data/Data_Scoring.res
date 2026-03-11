@@ -353,7 +353,7 @@ let update = (
       colorScores: Data_Id.isDummy(oppId) || Data_Id.isExternal(oppId) ? list{} : list{Color.toScore(color)},
       opponentResults: list{(oppId, result)},
       ratings: list{newRating},
-      isDummy: Data_Id.isDummy(playerId) || Data_Id.isExternal(playerId),
+      isDummy: Data_Id.isDummy(playerId),
     })
   | Some(data) =>
     Some({
