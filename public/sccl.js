@@ -54,7 +54,7 @@ function renderSCCL(tourney, players) {
                 const hasEarnedPoints = ratingDiff > 0.1;
 
                 const isOppDummy = oppId && oppId.includes("DUMMY");
-                const isNamedExtern = opponent && (opponent.FirstName || opponent.firstName || "").toUpperCase().includes("EXTERN");
+                const isNamedExtern = opponent && (opponent.FirstName || opponent.firstName || "").toUpperCase().includes("EXTERNAL");
 
                 if (isOppDummy) {
                     if (hasEarnedPoints || isNamedExtern) {
